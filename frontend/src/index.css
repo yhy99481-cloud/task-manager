@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #eef2ff 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    background: linear-gradient(to right, rgb(37 99 235), rgb(79 70 229));
+    color: white;
+    box-shadow: 0 10px 15px -3px rgb(59 130 246 / 0.3);
+    transition: all 0.2s;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 20px 25px -5px rgb(59 130 246 / 0.4);
+    transform: scale(1.05);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: rgb(55 65 81);
+    border: 2px solid rgb(229 231 235);
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    border-color: rgb(165 180 252);
+    background: rgb(238 242 255);
+    transform: scale(1.05);
+  }
+
+  .card {
+    background: rgb(255 255 255 / 0.8);
+    backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.5);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 2px solid rgb(229 231 235);
+    transition: all 0.2s;
+    outline: none;
+    background: rgb(255 255 255 / 0.5);
+    backdrop-filter: blur(4px);
+  }
+  .input-field:focus {
+    border-color: rgb(99 102 241);
+    box-shadow: 0 0 0 4px rgb(99 102 241 / 0.1);
+  }
+
+  .glass-effect {
+    background: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgb(255 255 255 / 0.5);
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(209 213 219);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(165 180 252);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
