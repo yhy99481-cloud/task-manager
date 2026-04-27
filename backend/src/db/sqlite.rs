@@ -5,18 +5,15 @@ use std::str::FromStr;
 pub type DbPool = Pool<Sqlite>;
 
 pub async fn create_pool(database_url: &str) -> Result<DbPool> {
-    // Ensure the directory exists for database files with path
-    if let Some(path) = database_url.strip_prefix("sqlite://") {
-        let db_path = std::path::Path::new(path);
-        // Only create directory if path contains directory separators
-        if db_path.parent().is_some() && db_path.parent().unwrap().as_os_str().len() > 0 {
-            if let Some(parent) = db_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
-        }
-    }
+    // For SQLite, we need to use a mode that creates the file
+    let connection_opts = if database_url.starts_with("sqlite://") {
+        // Add create_if_missing flag
+        format!("{}?mode=rwc", database_url)
+    } else {
+        database_url.to_string()
+    };
 
-    let pool = SqlitePool::connect(database_url).await?;
+    let pool = SqlitePool::connect(&connection_opts).await?;
     init_database(&pool).await?;
     Ok(pool)
 }

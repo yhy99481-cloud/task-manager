@@ -31,49 +31,44 @@ pub async fn get_tasks(
     let limit = query.limit.unwrap_or(10).min(100);
     let offset = (page - 1) * limit;
 
-    // Build query
-    let mut sql = "SELECT * FROM tasks WHERE user_id = ?".to_string();
-    let mut count_sql = "SELECT COUNT(*) as count FROM tasks WHERE user_id = ?".to_string();
-
+    // Build query conditions
+    let mut conditions = vec!["user_id = ?"];
     let mut params: Vec<String> = vec![user_id.clone()];
 
     // Filter by status
     if let Some(status) = &query.status {
-        sql.push_str(" AND status = ?");
-        count_sql.push_str(" AND status = ?");
+        conditions.push("status = ?");
         params.push(format!("{:?}", status).to_lowercase());
     }
 
     // Search by title
     if let Some(search) = &query.search {
-        sql.push_str(" AND title LIKE ?");
-        count_sql.push_str(" AND title LIKE ?");
+        conditions.push("title LIKE ?");
         params.push(format!("%{}%", search));
     }
 
-    // Add ordering and pagination
-    sql.push_str(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
-    params.push(limit.to_string());
-    params.push(offset.to_string());
+    let where_clause = conditions.join(" AND ");
 
     // Execute count query
-    let count_query = format!("{} AND user_id = ?", count_sql.trim_end_matches(&format!(" AND user_id = ?")));
-    let mut count_query_builder = sqlx::query_as::<_, (i64,)>(&count_query);
-    count_query_builder = count_query_builder.bind(&user_id);
-
-    if let Some(status) = &query.status {
-        count_query_builder = count_query_builder.bind(format!("{:?}", status).to_lowercase());
-    }
-    if let Some(search) = &query.search {
-        count_query_builder = count_query_builder.bind(format!("%{}%", search));
+    let count_sql = format!("SELECT COUNT(*) as count FROM tasks WHERE {}", where_clause);
+    let mut count_query_builder = sqlx::query_as::<_, (i64,)>(&count_sql);
+    for param in &params {
+        count_query_builder = count_query_builder.bind(param);
     }
 
     let (total,) = count_query_builder
         .fetch_one(&state.pool)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|e| {
+            eprintln!("Count query error: {:?}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
     // Execute tasks query
+    let sql = format!(
+        "SELECT * FROM tasks WHERE {} ORDER BY created_at DESC LIMIT {} OFFSET {}",
+        where_clause, limit, offset
+    );
     let mut tasks_query = sqlx::query_as::<_, Task>(&sql);
     for param in &params {
         tasks_query = tasks_query.bind(param);
